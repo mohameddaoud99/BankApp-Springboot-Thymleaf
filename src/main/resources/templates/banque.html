@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.springframework.org/security/tags">
+<head>
+<link href="/webjars/bootstrap/4.3.1/css/bootstrap.css" rel="stylesheet" />
+<link
+	href="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.css"
+	rel="stylesheet">
+<script
+	src="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.js"></script>
+<link
+	href="/webjars/bootstrap-glyphicons/bdd2cbfba0/css/bootstrap-glyphicons.css"
+	rel="stylesheet" />
+
+<script type="text/javascript" src="/webjars/jquery/3.4.1/jquery.min.js"></script>
+<script type="text/javascript"
+	src="/webjars/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/js/mainClient.js"
+	th:src="@{/js/mainClient.js}"></script>
+<script type="text/javascript" src="/js/sweetalert.min.js"
+	th:src="@{/js/sweetalert.min.js}"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<link rel="stylesheet"
+	href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"
+	th:href="@{//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css}" />
+
+<style type="text/css">
+.ui-autocomplete {
+	max-height: 100px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	z-index: 1000000;
+}
+</style>
+<script type="text/javascript">
+        function deleteClient(id) {
+            var id = id;
+
+            swal({
+                title: "Êtes-vous sûr ?",
+                text: "Une fois supprimé, vous ne pourrez plus le récupérer!",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+            })
+                .then((willDelete) => {
+                    if (willDelete) {
+                        $.ajax({
+                            url: "client/delete/" + id,
+                            type: "GET",
+                            success: function () {
+                                $("#" + id).remove();
+                                swal("supprimé", {
+                                    icon: "success",
+                                });
+                            },
+                            error: function () {
+                                swal("Poof! erreur serveur!", {
+                                    icon: "error",
+                                });
+                            }
+
+                        });
+                    } else {
+                        swal("Pas grave!");
+                    }
+                });
+        };
+    </script>
+
+<script th:inline="javascript">
+    var real_data = /*[[${clients}]]*/'noValue';
+    $(document).ready(function() {
+        $("#nameInput").autocomplete({
+            minLength : 1,
+            source : real_data,
+            select : function(e, ui) {
+            	$("#clientID").val(ui.item.id);
+                $("#nameOutput").text('ID Client = ' + ui.item.id);
+                return ui.item.id;
+            }
+        })
+    });
+</script>
+
+
+<meta charset="ISO-8859-1">
+<title>Convention Management IIT</title>
+</head>
+<body>
+	<div class="container-fluid col-md-11">
+		<br>
+		<div class="jumbotron jumbotron-fluid">
+			<div class="container">
+				<h1 class="display-4 text-center">BANQUE</h1>
+			</div>
+		</div>
+		<div class="row">
+
+			<div class="col-md-8">
+				<div class="btn-group btn-group-justified">
+					<div class="btn-group">
+						<button type="button" class="btn btn-outline-secondary btn-block"
+							data-toggle="modal" data-target="#addClient">Ajouter
+							Client</button>
+					</div>
+
+					<div class="btn-group">
+						<a type="button" class="btn btn-outline-secondary btn-block"
+							data-toggle="modal" data-target="#addCompte"
+							th:href="${'/client/getAllComptes/'}">Ajouter Compte</a>
+					</div>
+
+				</div>
+			</div>
+
+			<div class="col-md-4">
+				<input class="form-control border" id="myInput" type="text"
+					placeholder="Search.."> <br>
+			</div>
+		</div>
+
+		<div class="table-responsive">
+			<table class="table table-bordered table-hover small nowrap">
+				<thead class="thead-dark">
+					<tr>
+						<th style="width: 10%">N&deg;</th>
+						<th>Nom</th>
+						<th>Prenom</th>
+						<th>Adresse</th>
+						<th  style="width: 10%">Action</th>
+					</tr>
+				</thead>
+				<tbody id="myTable">
+					<tr th:each="client,iterStat : ${clients}" th:id="${client.id}">
+						<td><span th:text="${iterStat.count}">1</span></td>
+						<td th:text="${client.nom}"></td>
+						<td th:text="${client.prenom}"></td>
+						<td th:text="${client.adresse}"></td>
+						<td class="span2">
+							<div class="d-flex justify-content-sm-center">
+								<a th:href="${'/client/getOne/'+{client.id}}" id="btn-Edit">
+									<span class="glyphicon glyphicon-pencil"
+									style="color: #FFC107; font-size: 25px"></span>
+								</a> &nbsp; <a
+									th:href="'javascript:deleteClient(\''+ ${client.id} + '\');'"><span
+									class="glyphicon glyphicon-trash"
+									style="color: #DC3545; font-size: 25px"></span></a> &nbsp; <a
+									th:href="${'/compte/getComptes/'+{client.id}}"
+									id="comptesButton"> <span
+									class="glyphicon glyphicon-list-alt"
+									style="color: #4CAF50; font-size: 25px"></span>
+								</a>
+							</div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<!-- Add Client -->
+		<!-- Add Client -->
+
+		<div class="modal fade" id="addClient" tabindex="-1" role="dialog"
+			aria-labelledby="exampleModalLabel" aria-hidden="true">
+			<form th:action="@{/client/addClient}" method="post">
+				<div class="modal-dialog modal-xl" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="exampleModalLabel">Ajouter
+								Client</h5>
+							<button type="button" class="close" data-dismiss="modal"
+								aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+
+
+						<div class="modal-body">
+
+							<div class="form-group">
+								<label class="col-form-label">Nom :</label> <input type="text"
+									class="form-control" name="nom" required>
+							</div>
+
+							<div class="form-group">
+								<label class="col-form-label">Prenom :</label> <input
+									type="text" class="form-control" name="prenom" required>
+							</div>
+
+							<div class="form-group">
+								<label class="col-form-label">Adresse :</label> <input
+									type="text" class="form-control" name="adresse" required>
+							</div>
+						</div>
+
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary"
+								data-dismiss="modal">Close</button>
+							<button type="submit" class="btn btn-primary">Save</button>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+
+		<!-- Edit Client -->
+		<!-- Edit Client -->
+
+		<div class="modal fade" id="editModal" tabindex="-1" role="dialog"
+			aria-labelledby="exampleModalLabel" aria-hidden="true">
+
+			<form th:action="@{/client/updateClient}" method="POST">
+				<div class="modal-dialog modal-xl" role="document">
+					<div class="modal-content">
+
+						<div class="modal-header">
+							<h5 class="modal-title" id="editModalLabel">Modifier Client</h5>
+							<button type="button" class="close" data-dismiss="modal"
+								aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+
+						<div class="modal-body">
+
+
+							<div class="form-group">
+								<label class="col-form-label">Id :</label> <input type="text"
+									class="form-control" id="idEdit" name="id" required readonly>
+							</div>
+
+							<div class="form-group">
+								<label class="col-form-label">Nom :</label> <input type="text"
+									class="form-control" id="nomEdit" name="nom" required>
+							</div>
+
+							<div class="form-group">
+								<label class="col-form-label">Prenom :</label> <input
+									type="text" class="form-control" id="prenomEdit" name="prenom"
+									required>
+							</div>
+
+							<div class="form-group">
+								<label class="col-form-label">Adresse :</label> <input
+									type="text" class="form-control" id="adresseEdit"
+									name="adresse" required>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary"
+								data-dismiss="modal">Close</button>
+							<button type="submit" class="btn btn-primary">Save</button>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+
+		<!-- Add Compte -->
+		<!-- Add Compte -->
+
+		<div class="modal fade" id="addCompte" tabindex="-1" role="dialog"
+			aria-labelledby="exampleModalLabel" aria-hidden="true">
+			<form th:action="@{/compte/addCompte}" method="post">
+				<div class="modal-dialog modal-xl" role="document">
+
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="exampleModalLabel">Ajouter
+								Compte</h5>
+							<button type="button" class="close" data-dismiss="modal"
+								aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+
+
+						<div class="modal-body">
+							<div class="form-group">
+								<label class="col-form-label">Solde :</label> 
+								<input type="text" class="form-control" name="solde" required>
+							</div>
+							<div class="form-group">
+								<label class="col-form-label">Client :</label> 
+								<input id="nameInput" class="form-control" type="text"/> 
+								<input id="clientID" name="client" hidden>
+								<h6 id="nameOutput"></h6>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary"
+								data-dismiss="modal">Close</button>
+							<button type="submit" class="btn btn-primary">Save</button>
+						</div>
+					</div>
+			</form>
+		</div>
+	</div>
+</body>
+<script>
+    $(document).ready(
+        function () {
+            $("#myInput").on(
+                "keyup",
+                function () {
+                    var value = $(this).val().toLowerCase();
+                    $("#myTable tr").filter(
+                        function () {
+                            $(this).toggle(
+                                $(this).text().toLowerCase()
+                                    .indexOf(value) > -1)
+                        });
+                });
+        });
+</script>
+
+</html>
